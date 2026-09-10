@@ -8,9 +8,7 @@ WORKDIR /app
 
 # Copy files
 COPY CMakeLists.txt .
-COPY src/main.cpp .
-COPY gl_loader.h .
-COPY gl_loader.cpp .
+COPY src/ ./src/
 
 # Build the project
 RUN cmake -B build && cmake --build build
