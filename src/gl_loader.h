@@ -9,12 +9,6 @@
 #include <GL/gl.h>
 #include <cstddef>
 
-// ========== TYPES OPENGL 1.1 DOES NOT KNOW
-typedef char GLchar;
-typedef ptrdiff_t GLsizeiptr;
-typedef void (APIENTRY *GLDEBUGPROC)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-                                        const GLchar* message, const void* userParam);
-
 // ========== CONSTANTS OPENGL 1.1 DOES NOT KNOW
 #ifndef GL_ARRAY_BUFFER
 #define GL_ARRAY_BUFFER                 0x8892
@@ -61,91 +55,113 @@ typedef void (APIENTRY *GLDEBUGPROC)(GLenum source, GLenum type, GLuint id, GLen
 #define GL_DEBUG_SEVERITY_NOTIFICATION  0x826B
 #endif
 
-// ========== POINTER & FUNCTIONS
-// --- Shaders
-typedef GLuint (APIENTRY *PFN_glCreateShader)(GLenum type);
-extern PFN_glCreateShader glCreateShader;
+namespace Apogee {
+    // ========== TYPES OPENGL 1.1 DOES NOT KNOW
+    typedef char GLchar;
+    typedef ptrdiff_t GLsizeiptr;
+    typedef void (APIENTRY *GLDEBUGPROC)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                                            const GLchar* message, const void* userParam);
 
-typedef void (APIENTRY *PFN_glShaderSource)(GLuint shader, GLsizei count,
-                const GLchar* const* string, const GLint* length);
-extern PFN_glShaderSource glShaderSource;
+    // ========== POINTER & FUNCTIONS
+    // --- Shaders
+    typedef GLuint (APIENTRY *PFN_glCreateShader)(GLenum type);
+    extern PFN_glCreateShader glCreateShader;
 
-typedef void (APIENTRY *PFN_glCompileShader)(GLuint shader);
-extern PFN_glCompileShader glCompileShader;
+    typedef void (APIENTRY *PFN_glShaderSource)(GLuint shader, GLsizei count,
+                    const GLchar* const* string, const GLint* length);
+    extern PFN_glShaderSource glShaderSource;
 
-typedef void (APIENTRY *PFN_glGetShaderiv)(GLuint shader, GLenum pname, GLint* params);
-extern PFN_glGetShaderiv glGetShaderiv;
+    typedef void (APIENTRY *PFN_glCompileShader)(GLuint shader);
+    extern PFN_glCompileShader glCompileShader;
 
-typedef void (APIENTRY *PFN_glGetShaderInfoLog)(GLuint shader, GLsizei bufSize,
-                GLsizei* length, GLchar* infoLog);
-extern PFN_glGetShaderInfoLog glGetShaderInfoLog;
+    typedef void (APIENTRY *PFN_glGetShaderiv)(GLuint shader, GLenum pname, GLint* params);
+    extern PFN_glGetShaderiv glGetShaderiv;
 
-typedef void (APIENTRY *PFN_glDeleteShader)(GLuint shader);
-extern PFN_glDeleteShader glDeleteShader;
+    typedef void (APIENTRY *PFN_glGetShaderInfoLog)(GLuint shader, GLsizei bufSize,
+                    GLsizei* length, GLchar* infoLog);
+    extern PFN_glGetShaderInfoLog glGetShaderInfoLog;
 
-// --- Programs (shaders linked)
-typedef GLuint (APIENTRY *PFN_glCreateProgram)();
-extern PFN_glCreateProgram glCreateProgram;
+    typedef void (APIENTRY *PFN_glDeleteShader)(GLuint shader);
+    extern PFN_glDeleteShader glDeleteShader;
 
-typedef void (APIENTRY *PFN_glAttachShader)(GLuint program, GLuint shader);
-extern PFN_glAttachShader glAttachShader;
+    // --- Programs (shaders linked)
+    typedef GLuint (APIENTRY *PFN_glCreateProgram)();
+    extern PFN_glCreateProgram glCreateProgram;
 
-typedef void (APIENTRY *PFN_glLinkProgram)(GLuint program);
-extern PFN_glLinkProgram glLinkProgram;
+    typedef void (APIENTRY *PFN_glAttachShader)(GLuint program, GLuint shader);
+    extern PFN_glAttachShader glAttachShader;
 
-typedef void (APIENTRY *PFN_glGetProgramiv)(GLuint program, GLenum pname, GLint* params);
-extern PFN_glGetProgramiv glGetProgramiv;
+    typedef void (APIENTRY *PFN_glLinkProgram)(GLuint program);
+    extern PFN_glLinkProgram glLinkProgram;
 
-typedef void (APIENTRY *PFN_glGetProgramInfoLog)(GLuint program, GLsizei bufSize,
-                GLsizei* length, GLchar* infoLog);
-extern PFN_glGetProgramInfoLog glGetProgramInfoLog;
+    typedef void (APIENTRY *PFN_glGetProgramiv)(GLuint program, GLenum pname, GLint* params);
+    extern PFN_glGetProgramiv glGetProgramiv;
 
-typedef void (APIENTRY *PFN_glUseProgram)(GLuint program);
-extern PFN_glUseProgram glUseProgram;
+    typedef void (APIENTRY *PFN_glGetProgramInfoLog)(GLuint program, GLsizei bufSize,
+                    GLsizei* length, GLchar* infoLog);
+    extern PFN_glGetProgramInfoLog glGetProgramInfoLog;
 
-typedef void (APIENTRY *PFN_glDeleteProgram)(GLuint program);
-extern PFN_glDeleteProgram glDeleteProgram;
+    typedef void (APIENTRY *PFN_glUseProgram)(GLuint program);
+    extern PFN_glUseProgram glUseProgram;
 
-// --- Vertex Array Objects (VAO)
-typedef void (APIENTRY *PFN_glGenVertexArrays)(GLsizei n, GLuint* arrays);
-extern PFN_glGenVertexArrays glGenVertexArrays;
+    typedef void (APIENTRY *PFN_glDeleteProgram)(GLuint program);
+    extern PFN_glDeleteProgram glDeleteProgram;
 
-typedef void (APIENTRY *PFN_glBindVertexArray)(GLuint array);
-extern PFN_glBindVertexArray glBindVertexArray;
+    // --- Uniforms
+    typedef GLint (APIENTRY *PFN_glGetUniformLocation)(GLuint program, const GLchar* name);
+    extern PFN_glGetUniformLocation glGetUniformLocation;
 
-typedef void (APIENTRY *PFN_glDeleteVertexArrays)(GLsizei n, const GLuint* arrays);
-extern PFN_glDeleteVertexArrays glDeleteVertexArrays;
+    typedef void (APIENTRY *PFN_glUniform1f)(GLint location, GLfloat v0);
+    extern PFN_glUniform1f glUniform1f;
 
-// --- Vertex Buffer Objects (VBO)
-typedef void (APIENTRY *PFN_glGenBuffers)(GLsizei n, GLuint* buffers);
-extern PFN_glGenBuffers glGenBuffers;
+    typedef void (APIENTRY *PFN_glUniform3f)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+    extern PFN_glUniform3f glUniform3f;
 
-typedef void (APIENTRY *PFN_glBindBuffer)(GLenum target, GLuint buffer);
-extern PFN_glBindBuffer glBindBuffer;
+    typedef void (APIENTRY *PFN_glUniformMatrix4fv)(GLint location, GLsizei count, GLboolean transpose,
+                    const GLfloat* value);
+    extern PFN_glUniformMatrix4fv glUniformMatrix4fv;
 
-typedef void (APIENTRY *PFN_glBufferData)(GLenum target, GLsizeiptr size, const void* data,
-                                            GLenum usage);
-extern PFN_glBufferData glBufferData;
+    // --- Vertex Array Objects (VAO)
+    typedef void (APIENTRY *PFN_glGenVertexArrays)(GLsizei n, GLuint* arrays);
+    extern PFN_glGenVertexArrays glGenVertexArrays;
 
-typedef void (APIENTRY *PFN_glDeleteBuffers)(GLsizei n, const GLuint* buffers);
-extern PFN_glDeleteBuffers glDeleteBuffers;
+    typedef void (APIENTRY *PFN_glBindVertexArray)(GLuint array);
+    extern PFN_glBindVertexArray glBindVertexArray;
 
-// --- Vertex attributes
-typedef void (APIENTRY *PFN_glVertexAttribPointer)(GLuint index, GLint size,GLenum type,
-                                                    GLboolean normalized, GLsizei stride,
-                                                    const void* pointer);
-extern PFN_glVertexAttribPointer glVertexAttribPointer;
+    typedef void (APIENTRY *PFN_glDeleteVertexArrays)(GLsizei n, const GLuint* arrays);
+    extern PFN_glDeleteVertexArrays glDeleteVertexArrays;
 
-typedef void (APIENTRY *PFN_glEnableVertexAttribArray)(GLuint index);
-extern PFN_glEnableVertexAttribArray glEnableVertexAttribArray;
+    // --- Vertex Buffer Objects (VBO)
+    typedef void (APIENTRY *PFN_glGenBuffers)(GLsizei n, GLuint* buffers);
+    extern PFN_glGenBuffers glGenBuffers;
 
-// --- Debug (OpenGL 4.3+)
-typedef void (APIENTRY *PFN_glDebugMessageCallback)(GLDEBUGPROC callback, const void* userParam);
-extern PFN_glDebugMessageCallback glDebugMessageCallback;
+    typedef void (APIENTRY *PFN_glBindBuffer)(GLenum target, GLuint buffer);
+    extern PFN_glBindBuffer glBindBuffer;
 
-// ========== LOADER PUBLIC API
-// Loads all the pointers
-bool loadGLFunctions();
+    typedef void (APIENTRY *PFN_glBufferData)(GLenum target, GLsizeiptr size, const void* data,
+                                                GLenum usage);
+    extern PFN_glBufferData glBufferData;
 
-// Enable OpenGL 4.3+ debug system
-void enableDebugOutput();
+    typedef void (APIENTRY *PFN_glDeleteBuffers)(GLsizei n, const GLuint* buffers);
+    extern PFN_glDeleteBuffers glDeleteBuffers;
+
+    // --- Vertex attributes
+    typedef void (APIENTRY *PFN_glVertexAttribPointer)(GLuint index, GLint size,GLenum type,
+                                                        GLboolean normalized, GLsizei stride,
+                                                        const void* pointer);
+    extern PFN_glVertexAttribPointer glVertexAttribPointer;
+
+    typedef void (APIENTRY *PFN_glEnableVertexAttribArray)(GLuint index);
+    extern PFN_glEnableVertexAttribArray glEnableVertexAttribArray;
+
+    // --- Debug (OpenGL 4.3+)
+    typedef void (APIENTRY *PFN_glDebugMessageCallback)(GLDEBUGPROC callback, const void* userParam);
+    extern PFN_glDebugMessageCallback glDebugMessageCallback;
+
+    // ========== LOADER PUBLIC API
+    // Loads all the pointers
+    bool loadGLFunctions();
+
+    // Enable OpenGL 4.3+ debug system
+    void enableDebugOutput();
+} // Apogee

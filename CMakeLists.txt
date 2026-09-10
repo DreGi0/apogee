@@ -20,6 +20,8 @@ find_package(OpenGL REQUIRED)
 add_executable(Apogee
         src/main.cpp
         src/gl_loader.cpp
+        src/shader.cpp
+        src/shader.h
 )
 
 target_link_libraries(Apogee PRIVATE glfw OpenGL::GL)
