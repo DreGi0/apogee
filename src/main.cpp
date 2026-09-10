@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "gl_loader.h"
+#include "../gl_loader.h"
 #include <GLFW/glfw3.h>
 
 // ========== SHADERS (GLSL)

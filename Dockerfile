@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy files
 COPY CMakeLists.txt .
-COPY main.cpp .
+COPY src/main.cpp .
 COPY gl_loader.h .
 COPY gl_loader.cpp .
 

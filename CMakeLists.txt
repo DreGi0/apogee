@@ -17,6 +17,6 @@ FetchContent_MakeAvailable(glfw)
 
 find_package(OpenGL REQUIRED)
 
-add_executable(Apogee main.cpp
+add_executable(Apogee src/main.cpp
         gl_loader.cpp)
 target_link_libraries(Apogee PRIVATE glfw OpenGL::GL)
