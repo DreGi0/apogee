@@ -22,5 +22,6 @@ WORKDIR /app
 
 # Copy compiled executable from builder
 COPY --from=builder /app/build/Apogee .
+COPY assets/ ./assets/
 
 ENTRYPOINT ["./Apogee"]
