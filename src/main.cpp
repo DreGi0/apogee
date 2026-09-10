@@ -1,112 +1,37 @@
 #include <cstdio>
 #include <cstdlib>
-#include <fstream>
-#include <sstream>
 #include <string>
 
 #include "gl_loader.h"
 #include <GLFW/glfw3.h>
 
-static std::string readFile(const std::string& path) {
-    std::ifstream file(path);
+#include "shader.h"
 
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file at path: " + path);
+namespace Apogee {
+
+    // ========== CALLBACKS
+
+    static void errorCallback(int error, const char* description)
+    {
+        fprintf(stderr, "Error: %s\n", description);
     }
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-
-    return buffer.str();
-}
-
-// ========== CALLBACKS
-
-static void error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Error: %s\n", description);
-}
-
-static void key_callback(GLFWwindow* window, const int key, int scancode, const int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
-}
-
-static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-// ========== SHADER UTILITY
-static GLuint compileShader(const GLenum type, const char* src) {
-    const  GLuint shader = glCreateShader(type);
-
-    glShaderSource(shader, 1, &src, nullptr);
-    glCompileShader(shader);
-
-    // Errors validation
-    GLint success = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        GLint logLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-
-        char log[1024] = {};
-        const GLsizei maxLen = (logLength < 1024) ? logLength : 1024;
-        glGetShaderInfoLog(shader, maxLen, nullptr, log);
-
-        const char* typeName = (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
-        fprintf(stderr, "[shader] failed to compile %s:\n%s\n", typeName, log);
-
-        glDeleteShader(shader);
-        return 0;
+    static void keyCallback(GLFWwindow* window, const int key, int scancode, const int action, int mods)
+    {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
     }
 
-    return shader;
-}
-
-static GLuint createShaderProgram(const char* vsSource, const char* fsSource) {
-    const GLuint vs = compileShader(GL_VERTEX_SHADER, vsSource);
-    if (vs == 0) return 0;
-
-    const GLuint fs = compileShader(GL_FRAGMENT_SHADER, fsSource);
-    if (fs == 0) {
-        glDeleteShader(vs); // avoid GPU garbage
-        return 0;
+    static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+        glViewport(0, 0, width, height);
     }
-
-    const GLuint program = glCreateProgram();
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-
-    glLinkProgram(program);
-
-    GLint success = 0;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-    if (!success) {
-        char log[1024] = {};
-        glGetProgramInfoLog(program, 1024, nullptr, log);
-        fprintf(stderr, "[shader] failed to link \n%s\n", log);
-
-        glDeleteProgram(program);
-        glDeleteShader(vs);
-        glDeleteShader(fs);
-        return 0;
-    }
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-}
+} // Apogee
 
 // ========== MAIN
 
 int main() {
-    glfwSetErrorCallback(error_callback);
+    glfwSetErrorCallback(Apogee::errorCallback);
 
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -126,8 +51,8 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, Apogee::keyCallback);
+    glfwSetFramebufferSizeCallback(window, Apogee::framebufferSizeCallback);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -138,7 +63,7 @@ int main() {
     printf("GLSL version   : %s\n", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
     fflush(stdout);
 
-    if (!loadGLFunctions()) {
+    if (!Apogee::loadGLFunctions()) {
         fprintf(stderr, "Failed to load OpenGL functions\n");
         glfwDestroyWindow(window);
         glfwTerminate();
@@ -148,7 +73,7 @@ int main() {
     printf("[gl_loader] all functions are loaded OK\n");
     fflush(stdout);
 
-    enableDebugOutput();
+    Apogee::enableDebugOutput();
 
     // # Adjust viewport
     {
@@ -157,79 +82,81 @@ int main() {
         glViewport(0, 0, fbWidth, fbHeight);
     }
 
-    // --- COMPILE SHADERS
-    const GLuint shaderProgram = createShaderProgram(readFile("assets/shaders/triangle.vert").c_str(), readFile("assets/shaders/triangle.frag").c_str());
+    try {
+        // --- COMPILE SHADERS
+        const Apogee::Shader shaderProgram {"assets/shaders/triangle.vert", "assets/shaders/triangle.frag"};
+        printf("[shader] program created OK (id=%u)\n", shaderProgram.getId());
 
-    if (shaderProgram == 0) {
-        fprintf(stderr, "Failed to create shader program\n");
+
+        // --- TRIANGLE DATA
+        // # just to try something appear on screen
+        constexpr float vertices[] = {
+            // Position (x, y, z)  |  Color (r, g, b)
+            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   // triangle 1: up-right - red
+            -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // triangle 1: low-left - green
+            0.5f, -0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 1: low-right - blue
+
+            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   // triangle 2: up-right - blue
+            -0.5f, 0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 2: low-left - red
+            -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // triangle 2: low-right - green
+        };
+
+        // --- CREATE VAO & VBO
+        GLuint VAO, VBO;
+
+        // # Reserve IDs
+        Apogee::glGenVertexArrays(1, &VAO);
+        Apogee::glGenBuffers(1, &VBO);
+
+        // # Enable first VAO then VBO
+        Apogee::glBindVertexArray(VAO);
+        Apogee::glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+        // # Copy from RAM to GPU memory
+        Apogee::glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        // ___ Attribute 0: Positions
+        Apogee::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                                      6 * sizeof(float), reinterpret_cast<void*>(0));
+
+        Apogee::glEnableVertexAttribArray(0);
+
+        // ___ Attribute 1: Color
+        Apogee::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+                                      6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+
+        Apogee::glEnableVertexAttribArray(1);
+
+        Apogee::glBindVertexArray(0);
+
+        // --- PRINCIPAL LOOP
+        glClearColor(0.0f, 0.07f, 0.12f, 1.0f);
+
+        while (!glfwWindowShouldClose(window)) {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            shaderProgram.use();
+            shaderProgram.setVec3("uColor", 1.0f, 1.0f, 1.0f);
+            Apogee::glBindVertexArray(VAO);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+
+        fflush(stdout);
+
+        // --- CLEANUP
+        Apogee::glDeleteVertexArrays(1, &VAO);
+        Apogee::glDeleteBuffers(1, &VBO);
+
+    } catch (const std::exception& e) {
+        fprintf(stderr, "%s\n", e.what());
         glfwDestroyWindow(window);
         glfwTerminate();
         return EXIT_FAILURE;
     }
-
-    printf("[shader] program created OK (id=%u)\n", shaderProgram);
-    fflush(stdout);
-
-    // --- TRIANGLE DATA
-    // # just to try something appear on screen
-    const float vertices[] = {
-        // Position (x, y, z)  |  Color (r, g, b)
-        0.5f, 0.5f, 0.0f,      0.0f, 0.0f, 1.0f,   // triángulo 1: arriba-derecha - red
-        -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,   // triángulo 1: abajo-izquierda - green
-        0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // triángulo 1: abajo-derecha - blue
-
-        0.5f, 0.5f, 0.0f,      0.0f, 0.0f, 1.0f,   // triángulo 2: arriba-derecha - blue (repetido)
-        -0.5f, 0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // triángulo 2: arriba-izquierda - red (la esquina nueva)
-        -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,   // triángulo 2: abajo-izquierda - green (repetido)
-    };
-
-    // --- CREATE VAO & VBO
-    GLuint VAO, VBO;
-
-    // # Reserve IDs
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    // # Enable first VAO then VBO
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // # Copy from RAM to GPU memory
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // ___ Attribute 0: Positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                        6 * sizeof(float), reinterpret_cast<void*>(0));
-
-    glEnableVertexAttribArray(0);
-
-    // ___ Attribute 1: Color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-                            6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-
-    // --- PRINCIPAL LOOP
-    glClearColor(0.0f, 0.07f, 0.12f, 1.0f);
-
-    while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    // --- CLEANUP
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
