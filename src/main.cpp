@@ -1,39 +1,24 @@
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #include "gl_loader.h"
 #include <GLFW/glfw3.h>
 
-// ========== SHADERS (GLSL)
+static std::string readFile(const std::string& path) {
+    std::ifstream file(path);
 
-static auto VERTEX_SHADER_SRC = R"(
-#version 460 core
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file at path: " + path);
+    }
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
 
-out vec3 vertexColor;
-
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
-
-    vertexColor = aColor;
+    return buffer.str();
 }
-)";
-
-static auto FRAGMENT_SHADER_SRC = R"(
-#version 460 core
-
-in vec3 vertexColor;
-
-out vec4 FragColor;
-
-void main()
-{
-    FragColor = vec4(vertexColor, 1.0);
-}
-)";
 
 // ========== CALLBACKS
 
@@ -54,7 +39,7 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 // ========== SHADER UTILITY
-static GLuint compileShader(GLenum type, const char* src) {
+static GLuint compileShader(const GLenum type, const char* src) {
     const  GLuint shader = glCreateShader(type);
 
     glShaderSource(shader, 1, &src, nullptr);
@@ -160,12 +145,6 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    if (!loadGLFunctions()) {
-        fprintf(stderr, "Failed to load OpenGL functions\n");
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
     printf("[gl_loader] all functions are loaded OK\n");
     fflush(stdout);
 
@@ -179,7 +158,7 @@ int main() {
     }
 
     // --- COMPILE SHADERS
-    const GLuint shaderProgram = createShaderProgram(VERTEX_SHADER_SRC, FRAGMENT_SHADER_SRC);
+    const GLuint shaderProgram = createShaderProgram(readFile("assets/shaders/triangle.vert").c_str(), readFile("assets/shaders/triangle.frag").c_str());
 
     if (shaderProgram == 0) {
         fprintf(stderr, "Failed to create shader program\n");
@@ -194,10 +173,14 @@ int main() {
     // --- TRIANGLE DATA
     // # just to try something appear on screen
     const float vertices[] = {
-      // Position (x, y, z)  |  Color (r, g, b)
-        0.5f, 0.5f, 0.0f,       1.0f, 0.0f, 0.0f,   // up - red
-        -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // down left - green
-        0.5f, -0.5f, 0.0f,     0.0f, 0.0f, 1.0f     // down right - blue
+        // Position (x, y, z)  |  Color (r, g, b)
+        0.5f, 0.5f, 0.0f,      0.0f, 0.0f, 1.0f,   // triángulo 1: arriba-derecha - red
+        -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,   // triángulo 1: abajo-izquierda - green
+        0.5f, -0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // triángulo 1: abajo-derecha - blue
+
+        0.5f, 0.5f, 0.0f,      0.0f, 0.0f, 1.0f,   // triángulo 2: arriba-derecha - blue (repetido)
+        -0.5f, 0.5f, 0.0f,     1.0f, 0.0f, 0.0f,   // triángulo 2: arriba-izquierda - red (la esquina nueva)
+        -0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,   // triángulo 2: abajo-izquierda - green (repetido)
     };
 
     // --- CREATE VAO & VBO
@@ -237,7 +220,7 @@ int main() {
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
