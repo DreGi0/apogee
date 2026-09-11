@@ -4,61 +4,67 @@
 
 #include "shader.h"
 
+#include <cstdio>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 
 namespace Apogee {
     Shader::Shader(const std::string& vertPath, const std::string& fragPath) {
-        const GLuint vs = compileShader(GL_VERTEX_SHADER, readFile(vertPath).c_str());
+        const std::string vertSrc = readFile(vertPath);
+        const std::string fragSrc = readFile(fragPath);
+
+        const GLuint vs = compileShader(GL_VERTEX_SHADER, vertSrc.c_str());
         if (vs == 0) {
-            throw std::runtime_error("Failed to compile vertex shader");
+            throw std::runtime_error("[Shader] vertex stage failed: " + vertPath);
         }
 
-        const GLuint fs = compileShader(GL_FRAGMENT_SHADER, readFile(fragPath).c_str());
+        const GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragSrc.c_str());
         if (fs == 0) {
             glDeleteShader(vs); // avoid GPU garbage
-            throw std::runtime_error("Failed to compile fragment shader");
+            throw std::runtime_error("[Shader] fragment stage failed: " + fragPath);
         }
 
         const GLuint program = glCreateProgram();
         glAttachShader(program, vs);
         glAttachShader(program, fs);
-
         glLinkProgram(program);
 
-        GLint success = 0;
-        glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-        if (!success) {
-            GLint logLength = 0;
-            glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-
-            std::string log(static_cast<size_t>(logLength), '\0');
-            glGetProgramInfoLog(program, logLength, nullptr, log.data());
-
-            fprintf(stderr, "[shader] failed to link program:\n%s\n", log.c_str());
-        }
-
+        // Cleanup shader
         glDeleteShader(vs);
         glDeleteShader(fs);
+
+        GLint linked = 0;
+        glGetProgramiv(program, GL_LINK_STATUS, &linked);
+        if (!linked) {
+            const std::string log = getProgramInfoLog(program);
+            glDeleteProgram(program);
+
+            throw std::runtime_error("[Shader] link failed:\n" + log);
+        }
 
         programId = program;
     }
 
-    Shader::Shader(Shader &&other) noexcept {
-        programId = other.programId;
+    /**
+     *
+     */
+    Shader::Shader(Shader&& other) noexcept :
+    programId(other.programId),
+    uniformLocationCache(std::move(other.uniformLocationCache)) {
         other.programId = 0;
+        other.uniformLocationCache.clear();
     }
 
-    Shader & Shader::operator=(Shader &&other) noexcept {
-        if (this == &other)
-            return *this;
+    Shader& Shader::operator=(Shader&& other) noexcept {
+        if (this == &other) return *this;
 
         glDeleteProgram(programId);
         programId = other.programId;
-        other.programId = 0;
+        uniformLocationCache = std::move(other.uniformLocationCache);
 
+        other.programId = 0;
+        other.uniformLocationCache.clear();
         return *this;
     }
 
@@ -76,6 +82,33 @@ namespace Apogee {
         buffer << file.rdbuf();
 
         return buffer.str();
+    }
+
+    // ========== PRIVATE
+    // --- HELPERS
+    // Note: overcommented for my own learning purposes
+    std::string Shader::getShaderInfoLog(const GLuint shader) {
+        GLint length = 0; // Declare where the size of where the message is gonna be saved
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);  // Get from OpenGL warn msg length
+        if (length <= 1) return {};  // empty log
+
+        std::string log(static_cast<size_t>(length), '\0'); // the actual log format length
+        glGetShaderInfoLog(shader, length, nullptr, log.data()); // get the log from OpenGL
+        log.pop_back(); // avoid wierd stuff OpenGL adds
+        return log;
+    }
+
+    // Note: this is repeated code because the solution is more expensive than repeating the code itself
+    std::string Shader::getProgramInfoLog(const GLuint program) {
+        // Same as in shader but with program log
+        GLint length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+        if (length <= 1) return {}; // empty log x2 :)
+
+        std::string log(static_cast<size_t>(length), '\0');
+        glGetProgramInfoLog(program, length, nullptr, log.data());
+        log.pop_back();
+        return log;
     }
 
     GLint Shader::getUniformLocation(const std::string &name) const {
@@ -100,16 +133,8 @@ namespace Apogee {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
         if (!success) {
-            GLint logLength = 0;
-            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
-
-            char log[1024] = {};
-            const GLsizei maxLen = (logLength < 1024) ? logLength : 1024;
-            glGetShaderInfoLog(shader, maxLen, nullptr, log);
-
-            const char* typeName = (type == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
-            fprintf(stderr, "[shader] failed to compile %s:\n%s\n", typeName, log);
-
+            const char* typeName = (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment");
+            fprintf(stderr, "[Shader] failed to compile %s shader:\n%s\n", typeName, getShaderInfoLog(shader).c_str());
             glDeleteShader(shader);
             return 0;
         }
