@@ -18,6 +18,10 @@ namespace Apogee {
         static GLuint compileShader(GLenum type, const char* src);
         static std::string readFile(const std::string& path);
 
+        static std::string getShaderInfoLog(GLuint shader);
+        static std::string getProgramInfoLog(GLuint program);
+
+
         GLint getUniformLocation(const std::string& name) const;
 
     public:
