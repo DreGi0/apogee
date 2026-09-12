@@ -60,8 +60,7 @@ namespace Apogee {
      * to `stderr` and sets the global failure flag `g_anyFailed` to `true`.
      */
     static void* loadOne(const char* name) {
-        GLFWglproc proc = glfwGetProcAddress(name);
-
+        const GLFWglproc proc = glfwGetProcAddress(name);
         if (!proc) {
             fprintf(stderr, "[gl_loader] %s not found\n", name);
             g_anyFailed = true;
@@ -70,7 +69,18 @@ namespace Apogee {
         return reinterpret_cast<void*>(proc);
     }
 
+    // Same as loadOne, but a miss is reported and tolerated: the caller must null-check.
+    static void* loadOptional(const char* name) {
+        const GLFWglproc proc = glfwGetProcAddress(name);
+        if (!proc) {
+            fprintf(stderr, "[gl_loader] %s not available (optional)\n", name);
+            return nullptr;   // note: g_anyFailed untouched
+        }
+        return reinterpret_cast<void*>(proc);
+    }
+
     #define LOAD(name) name = reinterpret_cast<PFN_##name>(loadOne(#name))
+    #define LOAD_OPTIONAL(name) name = reinterpret_cast<PFN_##name>(loadOptional(#name))
 
     /**
      * @brief Loads and initializes all required OpenGL function pointers.
@@ -127,13 +137,15 @@ namespace Apogee {
         LOAD(glVertexAttribPointer);
         LOAD(glEnableVertexAttribArray);
 
-        // Debug (4.3+). If it fails is not fatal.
-        LOAD(glDebugMessageCallback);
+        // Debug (4.3+).
+        LOAD_OPTIONAL(glDebugMessageCallback); // Optional: a driver without KHR_debug still runs, just silently.
 
         return !g_anyFailed;
     }
 
-    #undef LOAD // Clear macro
+    // Clear macros
+    #undef LOAD_OPTIONAL
+    #undef LOAD
 
     // ========== DEBUG
     static const char* severityToString(const GLenum severity)

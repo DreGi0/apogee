@@ -21,7 +21,13 @@ add_executable(Apogee
         src/main.cpp
         src/gl_loader.cpp
         src/shader.cpp
-        src/shader.h
+        src/paths.cpp
 )
 
+target_compile_definitions(Apogee PRIVATE $<$<CONFIG:Debug>:APOGEE_DEBUG>)
 target_link_libraries(Apogee PRIVATE glfw OpenGL::GL)
+
+add_custom_command(TARGET Apogee POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:Apogee>/assets
+        COMMENT "Copying assets next to the executable")
