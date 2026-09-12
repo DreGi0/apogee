@@ -9,9 +9,11 @@ WORKDIR /app
 # Copy files
 COPY CMakeLists.txt .
 COPY src/ ./src/
+COPY assets/ ./assets/
 
 # Build the project
-RUN cmake -B build && cmake --build build
+ARG CMAKE_BUILD_TYPE=Release
+RUN cmake -B build -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} && cmake --build build
 
 # Runtime stage
 FROM ubuntu:24.04

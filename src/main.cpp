@@ -5,6 +5,7 @@
 #include "gl_loader.h"
 #include <GLFW/glfw3.h>
 
+#include "paths.h"
 #include "shader.h"
 
 namespace Apogee {
@@ -41,8 +42,10 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
+#ifdef APOGEE_DEBUG
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
 
     GLFWwindow* window = glfwCreateWindow(640, 480, "Apogee", nullptr, nullptr);
     if (!window) {
@@ -73,7 +76,9 @@ int main() {
     printf("[gl_loader] all functions are loaded OK\n");
     fflush(stdout);
 
+#ifdef APOGEE_DEBUG
     Apogee::enableDebugOutput();
+#endif
 
     // # Adjust viewport
     {
@@ -82,11 +87,14 @@ int main() {
         glViewport(0, 0, fbWidth, fbHeight);
     }
 
+
     try {
         // --- COMPILE SHADERS
-        const Apogee::Shader shaderProgram {"assets/shaders/triangle.vert", "assets/shaders/triangle.frag"};
+        const Apogee::Shader shaderProgram {
+            Apogee::assetPath("shaders/triangle.vert"),
+            Apogee::assetPath("shaders/triangle.frag")
+        };
         printf("[shader] program created OK (id=%u)\n", shaderProgram.getId());
-
 
         // --- TRIANGLE DATA
         // # just to try something appear on screen
