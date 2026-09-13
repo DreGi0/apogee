@@ -72,7 +72,7 @@ suggestions are welcome via Issues.
 
 ### First Triangle
 
-<img src="docs/triangle.png" width="320" alt="Apogee rendering a gradient triangle" />
+<img src="docs/images/first-triangle.png" width="320" alt="Apogee rendering a gradient triangle" />
 
 The first geometry ever rendered by this project: three vertices, each with its own color, pushed to 
 the GPU through a hand configured VAO/VBO. The gradient is not something I drew, it is the rasterizer 
