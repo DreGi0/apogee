@@ -23,10 +23,10 @@ target_include_directories(glad PUBLIC vendor/glad/include)
 
 add_executable(Apogee
         src/main.cpp
-        src/shader.cpp
-        src/paths.cpp
-        src/gl_debug.cpp
-        src/gl_debug.h
+        src/graphics/shader.cpp
+        src/core/paths.cpp
+        src/graphics/gl_debug.cpp
+        src/graphics/gl_debug.h
 )
 
 target_link_libraries(Apogee PRIVATE glfw OpenGL::GL glad)

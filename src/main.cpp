@@ -1,3 +1,15 @@
+/**
+* @file main.cpp
+ * @brief Main entry point for the Apogee engine.
+ *
+ * @details Handles the initialization of the GLFW window, OpenGL context creation,
+ * GLAD function loading, and runs the primary application rendering loop.
+ *
+ * @author André Iraheta
+ * @date September 8th 2026
+ */
+
+// ========== IMPORTS ==========
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -5,18 +17,40 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
-#include "gl_debug.h"
-#include "paths.h"
-#include "shader.h"
+#include "graphics/gl_debug.h"
+#include "core/paths.h"
+#include "graphics/shader.h"
 
+/**
+ * @namespace Apogee
+ * @brief Core namespace encapsulating engine functionality and callbacks.
+ */
 namespace Apogee {
 
-    // ========== CALLBACKS
+    // ----- CALLBACKS -----
+    /**
+     * @brief GLFW error callback handler.
+     *
+     * @param error An integer representing the GLFW error code.
+     * @param description A null-terminated UTF-8 string describing the error.
+     */
     static void errorCallback(int error, const char* description)
     {
         fprintf(stderr, "Error: %s\n", description);
     }
 
+    /**
+     * @brief GLFW keyboard input callback.
+     *
+     * @details Handles global key presses. Currently configured to request
+     * window closure when the ESCAPE key is pressed.
+     *
+     * @param window The window that is supposed to receive the event.
+     * @param key The keyboard key that was pressed or released.
+     * @param scancode The system specific scancode of the key (un-used).
+     * @param action GLFW_PRESS, GLFW_RELEASE or GLFW_REPEAT.
+     * @param mods Bit field describing which modifier keys were held down (un-used).
+     */
     static void keyCallback(GLFWwindow* window, const int key, int scancode, const int action, int mods)
     {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -24,14 +58,33 @@ namespace Apogee {
         }
     }
 
-    static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+    /**
+     * @brief GLFW framebuffer resize callback.
+     *
+     * @details Ensures the OpenGL viewport matches the new window dimensions
+     * upon window resizing by the user or the OS.
+     *
+     * @param window The window whose framebuffer was resized.
+     * @param width The new width, in pixels, of the framebuffer.
+     * @param height The new height, in pixels, of the framebuffer.
+     */
+    static void framebufferSizeCallback(GLFWwindow* window, const int width, const int height) {
         glViewport(0, 0, width, height);
     }
-} // Apogee
+} // namespace Apogee
 
-// ========== MAIN
-
+// ========== CORE ==========
+/**
+ * @brief Application main entry point.
+ *
+ * @details Bootstraps the environment by initializing GLFW, configuring an
+ * OpenGL 4.6 Core context, and setting up initial vertex data. Enters a
+ * blocking while-loop for the render cycle until termination is requested.
+ *
+ * @return EXIT_SUCCESS upon clean termination, EXIT_FAILURE if initialization fails.
+ */
 int main() {
+    // TODO: Refactor to make it less of a God kind of function - It handles to many things
     glfwSetErrorCallback(Apogee::errorCallback);
 
     if (!glfwInit()) {
