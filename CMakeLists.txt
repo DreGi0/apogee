@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)   # fail instead of hiding the issue
 set(CMAKE_CXX_EXTENSIONS OFF)         # use pure C++20, no GNU extensions
 
 set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -17,15 +18,19 @@ FetchContent_MakeAvailable(glfw)
 
 find_package(OpenGL REQUIRED)
 
+add_library(glad STATIC vendor/glad/src/gl.c)
+target_include_directories(glad PUBLIC vendor/glad/include)
+
 add_executable(Apogee
         src/main.cpp
-        src/gl_loader.cpp
         src/shader.cpp
         src/paths.cpp
+        src/gl_debug.cpp
+        src/gl_debug.h
 )
 
+target_link_libraries(Apogee PRIVATE glfw OpenGL::GL glad)
 target_compile_definitions(Apogee PRIVATE $<$<CONFIG:Debug>:APOGEE_DEBUG>)
-target_link_libraries(Apogee PRIVATE glfw OpenGL::GL)
 
 add_custom_command(TARGET Apogee POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

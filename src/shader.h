@@ -6,7 +6,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "gl_loader.h"
+#include <glad/gl.h>
 
 
 namespace Apogee {
