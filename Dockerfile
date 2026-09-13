@@ -9,6 +9,7 @@ WORKDIR /app
 # Copy files
 COPY CMakeLists.txt .
 COPY src/ ./src/
+COPY vendor/ ./vendor/
 COPY assets/ ./assets/
 
 # Build the project

@@ -2,16 +2,16 @@
 #include <cstdlib>
 #include <string>
 
-#include "gl_loader.h"
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+#include "gl_debug.h"
 #include "paths.h"
 #include "shader.h"
 
 namespace Apogee {
 
     // ========== CALLBACKS
-
     static void errorCallback(int error, const char* description)
     {
         fprintf(stderr, "Error: %s\n", description);
@@ -54,26 +54,27 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    glfwSetKeyCallback(window, Apogee::keyCallback);
-    glfwSetFramebufferSizeCallback(window, Apogee::framebufferSizeCallback);
-
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    printf("OpenGL version : %s\n", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-    printf("Renderer       : %s\n", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-    printf("Vendor         : %s\n", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-    printf("GLSL version   : %s\n", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-    fflush(stdout);
-
-    if (!Apogee::loadGLFunctions()) {
-        fprintf(stderr, "Failed to load OpenGL functions\n");
+    const int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress));
+    if (version == 0) {
+        fprintf(stderr, "Failed to initialize GLAD\n");
         glfwDestroyWindow(window);
         glfwTerminate();
         return EXIT_FAILURE;
     }
 
-    printf("[gl_loader] all functions are loaded OK\n");
+    printf("[glad] loaded OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+    fflush(stdout);
+
+    glfwSetKeyCallback(window, Apogee::keyCallback);
+    glfwSetFramebufferSizeCallback(window, Apogee::framebufferSizeCallback);
+
+    printf("OpenGL version : %s\n", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+    printf("Renderer       : %s\n", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+    printf("Vendor         : %s\n", reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+    printf("GLSL version   : %s\n", reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
     fflush(stdout);
 
 #ifdef APOGEE_DEBUG
@@ -113,29 +114,29 @@ int main() {
         GLuint VAO, VBO;
 
         // # Reserve IDs
-        Apogee::glGenVertexArrays(1, &VAO);
-        Apogee::glGenBuffers(1, &VBO);
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
 
         // # Enable first VAO then VBO
-        Apogee::glBindVertexArray(VAO);
-        Apogee::glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         // # Copy from RAM to GPU memory
-        Apogee::glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
         // ___ Attribute 0: Positions
-        Apogee::glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                                       6 * sizeof(float), reinterpret_cast<void*>(0));
 
-        Apogee::glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0);
 
         // ___ Attribute 1: Color
-        Apogee::glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
                                       6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
 
-        Apogee::glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(1);
 
-        Apogee::glBindVertexArray(0);
+        glBindVertexArray(0);
 
         // --- PRINCIPAL LOOP
         glClearColor(0.0f, 0.07f, 0.12f, 1.0f);
@@ -145,7 +146,7 @@ int main() {
 
             shaderProgram.use();
             shaderProgram.setVec3("uColor", 1.0f, 1.0f, 1.0f);
-            Apogee::glBindVertexArray(VAO);
+            glBindVertexArray(VAO);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -156,8 +157,8 @@ int main() {
         fflush(stdout);
 
         // --- CLEANUP
-        Apogee::glDeleteVertexArrays(1, &VAO);
-        Apogee::glDeleteBuffers(1, &VBO);
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
 
     } catch (const std::exception& e) {
         fprintf(stderr, "%s\n", e.what());
