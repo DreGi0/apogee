@@ -20,6 +20,10 @@
 #include "graphics/shader.h"
 #include "graphics/mesh.h"
 
+/**
+ * @brief Entry point. Creates the window, loads GL, and runs the render loop.
+ * @return EXIT_SUCCESS on clean shutdown, EXIT_FAILURE if initialization throws.
+ */
 int main() {
     try {
         // GLFW window initialization

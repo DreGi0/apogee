@@ -1,0 +1,9 @@
+PROJECT_NAME      = Apogee
+PROJECT_BRIEF     = "A Kerbal Space Program style game built from scratch in C++20"
+OUTPUT_DIRECTORY  = docs/api
+
+INPUT             = src docs/namespaces.h
+RECURSIVE         = YES
+
+WARN_NO_PARAMDOC  = YES
+GENERATE_LATEX    = NO
