@@ -1,15 +1,14 @@
 /**
-* @file main.cpp
+ * @file main.cpp
  * @brief Main entry point for the Apogee engine.
  *
  * @details Handles the initialization of the GLFW window, OpenGL context creation,
  * GLAD function loading, and runs the primary application rendering loop.
  *
  * @author DreGi0
- * @date September 8th 2026
+ * @date September 8th, 2026
  */
 
-// ========== IMPORTS ==========
 #include <cstdio>
 #include <cstdlib>
 #include <glad/gl.h>
@@ -17,17 +16,16 @@
 
 #include "core/paths.h"
 #include "core/window.h"
+#include "graphics/gl_debug.h"
 #include "graphics/shader.h"
 #include "graphics/mesh.h"
-#include "graphics/gl_debug.h"
 
-// ========== CORE ==========
 int main() {
     try {
-        // ----- CREATE WINDOW -----
+        // GLFW window initialization
         const Apogee::Window window(640, 480, "Apogee");
 
-        // ----- INITIALIZE GLAD -----
+        // Load from pointers to functions through GLAD
         const int version = gladLoadGL(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress));
         if (version == 0) {
             fprintf(stderr, "Failed to initialize GLAD\n");
@@ -47,36 +45,37 @@ int main() {
         Apogee::enableDebugOutput();
 #endif
 
-        // ----- ADJUST VIEWPORT -----
-        int fbWidth = 0, fbHeight = 0;
+        // Viewport adjustments
+        int fbWidth = 0;
+        int fbHeight = 0;
         window.getFramebufferSize(fbWidth, fbHeight);
         glViewport(0, 0, fbWidth, fbHeight);
 
-        // ----- COMPILE SHADERS -----
+        // Load and compile shaders
         const Apogee::Shader shaderProgram {
             Apogee::assetPath("shaders/triangle.vert"),
             Apogee::assetPath("shaders/triangle.frag")
         };
         printf("[shader] program created OK (id=%u)\n", shaderProgram.getId());
 
-        // ----- TRIANGLE DATA -----
+        // Model geometry
         constexpr float vertices[] = {
             // Position (x, y, z)  |  Color (r, g, b)
-            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   // triangle 1: up-right - red
+            0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   // triangle 1: up-right - blue
             -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // triangle 1: low-left - green
-            0.5f, -0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 1: low-right - blue
+            0.5f, -0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 1: low-right - red
 
             0.5f, 0.5f, 0.0f,       0.0f, 0.0f, 1.0f,   // triangle 2: up-right - blue
-            -0.5f, 0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 2: low-left - red
-            -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // triangle 2: low-right - green
+            -0.5f, 0.5f, 0.0f,      1.0f, 0.0f, 0.0f,   // triangle 2: up-left - red
+            -0.5f, -0.5f, 0.0f,     0.0f, 1.0f, 0.0f,   // triangle 2: low-left - green
         };
 
         const Apogee::Mesh triangleMesh(vertices, 6);
 
-        // # Set window color to a dark blueish
+        // Background color used by glClear() on every frame
         glClearColor(0.0f, 0.07f, 0.12f, 1.0f);
 
-        // ----- MAIN LOOP -----
+        // Main rendering loop
         while (!window.shouldClose()) {
             glClear(GL_COLOR_BUFFER_BIT);
 

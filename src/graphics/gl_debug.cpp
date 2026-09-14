@@ -1,7 +1,9 @@
-//
-// Created by gio on 9/12/26.
-//
-
+/**
+ * @file gl_debug.cpp
+ * @brief OpenGL 4.3+ debug output setup.
+ * @author DreGi0
+ * @date September 12th, 2026
+ */
 #include "gl_debug.h"
 
 #include <cstdio>
@@ -9,7 +11,7 @@
 
 
 namespace Apogee {
-    ///
+    /// Maps a GL_DEBUG_SEVERITY_* enum to a short printable label.
     static const char* severityToString(const GLenum severity)
     {
         switch (severity) {
@@ -21,14 +23,13 @@ namespace Apogee {
         }
     }
 
-    ///
-    static void GLAD_API_PTR debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
-                                        GLsizei length, const GLchar* message, const void* userParam) {
+    /// Callback invoked by the driver for each debug message. Signature fixed by glDebugMessageCallback.
+    static void GLAD_API_PTR debugCallback(GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, const GLenum severity,
+                                        GLsizei /*length*/, const GLchar* message, const void* /*userParam*/) {
 
         fprintf(stderr, "[GL %s] %s\n", severityToString(severity), message);
     }
 
-    ///
     void enableDebugOutput() {
         if (!GLAD_GL_VERSION_4_3) {
             fprintf(stderr, "[gl_debug] KHR_debug not available\n");
@@ -44,4 +45,4 @@ namespace Apogee {
 
         fprintf(stderr, "[gl_debug] debug output enabled\n");
     }
-} // Apogee
+} // namespace Apogee

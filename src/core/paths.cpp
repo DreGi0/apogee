@@ -1,6 +1,9 @@
-//
-// Created by gio on 9/11/26.
-//
+/**
+ * @file paths.cpp
+ * @brief Implementation of path resolution utilities.
+ * @author DreGi0
+ * @date September 11th, 2026
+ */
 
 #include "paths.h"
 #include <filesystem>
@@ -8,16 +11,21 @@
 namespace Apogee {
     namespace fs = std::filesystem;
 
-    // If you're dumb like me, basically this works like this:
-    // executableDir(): Yo, what's the path to the exe in this environment
-    // Linux: Yo, well its 'path/to/project/build/Apogee'
-    // executableDir(): Thanks man, let me remove what I don't need tho. Now I have 'path/to/project/build/'
-    // assetpath(): hey! executableDir(), let me adjust that path a little bit to 'path/to/project/build/assets'
-    // Me: nice you three, now this thing actually works 🎉🎉🎉
+    /*
+     * If you're dumb like me, the workflow is like this conversation between methods:
+     * assetpath(): Hey executableDir()! I need to know the path to the exe since assets is at the same level.
+     * executableDir(): Okay, let me see with Linux. Hey! what's the path to the exe in this environment.
+     * Linux: It's 'path/to/project/build/Apogee'.
+     * executableDir(): Thanks. assetpath(), the path is 'path/to/project/build/Apogee'.
+     * assetpath(): Thanks. So my path it actually is 'path/to/project/build/assets'.
+     *
+     * PS: I don't know why I found this one kind of hard to comprehend even though it's a pretty simple concept.
+     */
 
+    // Linux-only implementation for now. Windows/macOS support branches will be added
+    // when the engine goes cross-platform and I learn how :/.
 
-    // Linux-only for now. Windows/macOS get their own branch when the engine goes cross-platform and I
-    // understand how it works :C
+    /// Returns the directory containing the running executable.
     static fs::path executableDir() {
         std::error_code ec;
         const fs::path exe = fs::read_symlink("/proc/self/exe", ec);
@@ -26,7 +34,7 @@ namespace Apogee {
     }
 
     std::string assetPath(const std::string& relative) {
-        // Computed once, on first call. This static IS the asset root's owner.
+        // Computed once on the first call. This static is the asset root.
         static const fs::path root = executableDir() / "assets";
         return (root / relative).string();
     }
