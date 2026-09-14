@@ -45,10 +45,7 @@ namespace Apogee {
 
         programId = program;
     }
-
-    /**
-     *
-     */
+    
     Shader::Shader(Shader&& other) noexcept :
     programId(other.programId),
     uniformLocationCache(std::move(other.uniformLocationCache)) {
