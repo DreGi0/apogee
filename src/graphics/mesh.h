@@ -1,34 +1,61 @@
-//
-// Created by gio on 9/13/26.
-//
+/**
+ * @file mesh.h
+ * @brief Mesh class definition for OpenGL geometry handling.
+ * @author DreGi0
+ * @date September 13th, 2026
+ */
 
-#ifndef APOGEE_MESH_H
-#define APOGEE_MESH_H
+#pragma once
 
-// ========== IMPORTS ==========
 #include <cstddef>
 #include <glad/gl.h>
 
 namespace Apogee {
+    /**
+     * @class Mesh
+     * @brief Encapsulates a Vertex Array Object (VAO) and Vertex Buffer Object (VBO).
+     *
+     * Handles the loading of vertices to GPU and afterwards rendering.
+     */
     class Mesh {
     public:
+        /**
+         * @brief Constructs a new Mesh Object and initialize buffers on the GPU.
+         * @param vertices Pointer vertex float data array (Position + Color).
+         * @param vertexCount Total number of vertices to process.
+         */
         Mesh(const float* vertices, size_t vertexCount);
 
+        // Disable copy to avoid duplicity of OpenGL handles
         Mesh(const Mesh&) = delete;
         Mesh& operator=(const Mesh&) = delete;
 
+        /**
+         * @brief Movement constructor. Transfer buffer properties.
+         * @param other Instance where the resources are moving from.
+         */
         Mesh(Mesh&& other) noexcept;
+
+        /**
+         * @brief Movement assignation operator.
+         * @param other  Instance where the resources are moving from.
+         * @return Reference to this instance.
+         */
         Mesh& operator=(Mesh&& other) noexcept;
 
+        /**
+         * @brief Mesh rendering using OpenGL draw functions.
+         */
         void draw() const;
 
+        /**
+         * Destructor. Free up assigned hardware resources (VAO & VBO)
+         */
         ~Mesh();
 
     private:
-        GLsizei vertexCount = 0;
-        GLuint vao = 0;
-        GLuint vbo = 0;
+        GLsizei m_vertexCount = 0;
+        GLuint m_vao = 0;
+        GLuint m_vbo = 0;
     };
-} // Apogee
-
-#endif //APOGEE_MESH_H
+} // namespace Apogee
