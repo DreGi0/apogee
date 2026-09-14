@@ -26,7 +26,8 @@ add_executable(Apogee
         src/graphics/shader.cpp
         src/core/paths.cpp
         src/graphics/gl_debug.cpp
-        src/graphics/gl_debug.h
+        src/core/window.cpp
+        src/graphics/mesh.cpp
 )
 
 target_link_libraries(Apogee PRIVATE glfw OpenGL::GL glad)
