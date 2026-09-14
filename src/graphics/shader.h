@@ -37,11 +37,14 @@ namespace Apogee {
 
         /**
          * @brief Move constructor. Transfers ownership of the OpenGL program handle.
+         * @param other Instance the resources are moved from.
          */
         Shader(Shader&& other) noexcept;
 
         /**
          * @brief Move assignment operator.
+         * @param other Instance the resources are moved from.
+         * @return Reference to this instance.
          */
         Shader& operator=(Shader&& other) noexcept;
 
@@ -59,16 +62,22 @@ namespace Apogee {
 
         /**
          * @brief Sets a floating-point uniform in the shader.
+         * @param name Uniform name as declared in the shader source.
+         * @param value Value to upload.
          */
         void setFloat(const std::string& name, float value) const;
 
         /**
          * @brief Sets a 3-component vector uniform in the shader.
+         * @param name Uniform name as declared in the shader source.
+         * @param x,y,z Vector components.
          */
         void setVec3(const std::string& name, float x, float y, float z) const;
 
         /**
          * @brief Sets a 4x4 matrix uniform in the shader.
+         * @param name Uniform name as declared in the shader source.
+         * @param matrixData Pointer to 16 floats in column-major order.
          */
         void setMat4(const std::string& name, const float* matrixData) const;
 

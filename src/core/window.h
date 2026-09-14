@@ -22,6 +22,10 @@ namespace Apogee {
      * are freed and the GLFW library is terminated safely.
      */
     struct WindowDeleter {
+        /**
+         * @brief Destroys the window and terminates GLFW.
+         * @param w Window handle to destroy.
+         */
         void operator()(GLFWwindow* w) const noexcept {
             glfwDestroyWindow(w);
             glfwTerminate();
@@ -51,8 +55,13 @@ namespace Apogee {
         Window(const Window&) = delete;
         Window& operator=(const Window&) = delete;
 
-        // Allow default movement semantic
+        /// Move constructor. Transfers the window handle; the moved-from object is left empty.
         Window(Window&&) noexcept = default;
+
+        /**
+         * @brief Move assignment. Transfers the window handle; the moved-from object is left empty.
+         * @return Reference to this instance.
+         */
         Window& operator=(Window&&) noexcept = default;
 
         /**
