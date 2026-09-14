@@ -1,8 +1,12 @@
-//
-// Created by gio on 9/10/26.
-//
+/**
+ * @file shader.h
+ * @brief Shader class definition for compiling and managing OpenGL shader programs.
+ * @author DreGi0
+ * @date September 10th, 2026
+ */
 
 #pragma once
+
 #include <string>
 #include <unordered_map>
 
@@ -10,10 +14,75 @@
 
 
 namespace Apogee {
+    /**
+     * @class Shader
+     * @brief Encapsulates an OpenGL shader program, including compilation and uniform management.
+     *
+     * Reads vertex and fragment shaders from files, compiles them, links them into a
+     * program, and caches uniform locations for performance.
+     */
     class Shader {
+    public:
+        /**
+         * @brief Constructs and compiles a shader program from file paths.
+         * @param vertPath Path to the vertex shader file.
+         * @param fragPath Path to the fragment shader file.
+         * @throws std::runtime_error If file reading, compilation, or linking fails.
+         */
+        Shader(const std::string& vertPath, const std::string& fragPath);
+
+        // Disable copy to avoid OpenGL handle duplication
+        Shader(const Shader&) = delete;
+        Shader& operator=(const Shader&) = delete;
+
+        /**
+         * @brief Move constructor. Transfers ownership of the OpenGL program handle.
+         */
+        Shader(Shader&& other) noexcept;
+
+        /**
+         * @brief Move assignment operator.
+         */
+        Shader& operator=(Shader&& other) noexcept;
+
+        /**
+         * @brief Destructor. Deletes the shader program from the GPU.
+         */
+        ~Shader();
+
+        /**
+         * @brief Binds this shader program for subsequent rendering commands.
+         */
+        void use() const;
+
+        // Note: Setters assume use() was called. OpenGL updates the uniform in the active program.
+
+        /**
+         * @brief Sets a floating-point uniform in the shader.
+         */
+        void setFloat(const std::string& name, float value) const;
+
+        /**
+         * @brief Sets a 3-component vector uniform in the shader.
+         */
+        void setVec3(const std::string& name, float x, float y, float z) const;
+
+        /**
+         * @brief Sets a 4x4 matrix uniform in the shader.
+         */
+        void setMat4(const std::string& name, const float* matrixData) const;
+
+        /**
+         * @brief Retrieves the underlying OpenGL program ID.
+         * @return The OpenGL program handle.
+         */
+        [[nodiscard]] GLuint getId() const { return m_programId; }
+
     private:
-        GLuint programId = 0;
-        mutable std::unordered_map<std::string, GLint> uniformLocationCache;
+        GLuint m_programId = 0;
+
+        // Cache to avoid repeated string hashing and OpenGL lookups for uniforms
+        mutable std::unordered_map<std::string, GLint> m_uniformLocationCache;
 
         static GLuint compileShader(GLenum type, const char* src);
         static std::string readFile(const std::string& path);
@@ -23,25 +92,5 @@ namespace Apogee {
 
 
         GLint getUniformLocation(const std::string& name) const;
-
-    public:
-        Shader(const std::string& vertPath, const std::string& fragPath);
-
-        Shader(const Shader&) = delete;
-        Shader& operator=(const Shader&) = delete;
-
-        Shader(Shader&& other) noexcept;
-        Shader& operator=(Shader&& other) noexcept;
-
-        ~Shader();
-
-        void use() const;
-
-        // Setters assume use() was called. OpenGL updates the uniform in the active program, not in 'this' object.
-        void setFloat(const std::string& name, float value) const;
-        void setVec3(const std::string& name, float x, float y, float z) const;
-        void setMat4(const std::string& name, const float* matrixData) const;
-
-        GLuint getId() const { return programId; }
     };
-} // Apogee
+} // namespace Apogee

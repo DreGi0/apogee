@@ -1,14 +1,10 @@
 /**
  * @file window.cpp
- * @brief TODO.
- *
- * @details TODO.
- *
+ * @brief Window class implementation and GLFW callback configuration
  * @author DreGi0
- * @date September 12th 2026
+ * @date September 12th, 2026
  */
 
-// ========== IMPORTS ==========
 #include <glad/gl.h>
 #include <cstdio>
 #include <stdexcept>
@@ -16,20 +12,7 @@
 #include "window.h"
 
 namespace Apogee {
-    // ----- CALLBACKS -----
-    void Window::errorCallback(const int error, const char* description) {
-        fprintf(stderr, "Error: %s\n", description);
-    }
-
-    void Window::keyCallback(GLFWwindow* window, const int key, int scancode, const int action, int mods) {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-        }
-    }
-
-    void Window::framebufferSizeCallback(GLFWwindow* window, const int width, const int height) {
-        glViewport(0, 0, width, height);
-    }
+    // ----- Constructor & Methods -----
 
     Window::Window(const int width, const int height, const std::string& title) {
         glfwSetErrorCallback(errorCallback);
@@ -38,6 +21,7 @@ namespace Apogee {
             throw std::runtime_error("Failed to initialize GLFW");
         }
 
+        // OpenGL 4.6 core profile configuration
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -52,21 +36,23 @@ namespace Apogee {
             throw std::runtime_error("Failed to create GLFW window");
         }
 
-        handle.reset(raw);
+        // unique_ptr takes ownership of the raw handle
+        m_handle.reset(raw);
 
-        glfwMakeContextCurrent(handle.get());
-        glfwSwapInterval(1);
+        glfwMakeContextCurrent(m_handle.get());
+        glfwSwapInterval(1); // Enable V-Sync by default
 
-        glfwSetKeyCallback(handle.get(), keyCallback);
-        glfwSetFramebufferSizeCallback(handle.get(), framebufferSizeCallback);
+        // Register event callbacks with active window
+        glfwSetKeyCallback(m_handle.get(), keyCallback);
+        glfwSetFramebufferSizeCallback(m_handle.get(), framebufferSizeCallback);
     }
 
     bool Window::shouldClose() const {
-        return glfwWindowShouldClose(handle.get());
+        return glfwWindowShouldClose(m_handle.get());
     }
 
     void Window::swapBuffers() const {
-        glfwSwapBuffers(handle.get());
+        glfwSwapBuffers(m_handle.get());
     }
 
     void Window::pollEvents() {
@@ -74,6 +60,25 @@ namespace Apogee {
     }
 
     void Window::getFramebufferSize(int &width, int &height) const {
-        glfwGetFramebufferSize(handle.get(), &width, &height);
+        glfwGetFramebufferSize(m_handle.get(), &width, &height);
     }
+
+    // ----- Callbacks -----
+
+    void Window::errorCallback(const int /*error*/, const char* description) {
+        fprintf(stderr, "Error: %s\n", description);
+    }
+
+    void Window::keyCallback(GLFWwindow* window, const int key, int /*scancode*/, const int action, int /*mods*/) {
+        // Close window when ESC key is pressed.
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+    }
+
+    void Window::framebufferSizeCallback(GLFWwindow* /*window*/, const int width, const int height) {
+        // Updates OpenGL rendering canvas when resized.
+        glViewport(0, 0, width, height);
+    }
+
 } // namespace Apogee

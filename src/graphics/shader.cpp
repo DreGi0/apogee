@@ -1,6 +1,9 @@
-//
-// Created by gio on 9/10/26.
-//
+/**
+ * @file shader.cpp
+ * @brief Implementation of the Shader class, compilation, and uniform management.
+ * @author DreGi0
+ * @date September 10th, 2026
+ */
 
 #include "shader.h"
 
@@ -21,7 +24,7 @@ namespace Apogee {
 
         const GLuint fs = compileShader(GL_FRAGMENT_SHADER, fragSrc.c_str());
         if (fs == 0) {
-            glDeleteShader(vs); // avoid GPU garbage
+            glDeleteShader(vs); // Avoid GPU garbage
             throw std::runtime_error("[Shader] fragment stage failed: " + fragPath);
         }
 
@@ -30,7 +33,7 @@ namespace Apogee {
         glAttachShader(program, fs);
         glLinkProgram(program);
 
-        // Cleanup shader
+        // Cleanup individual shaders after linking
         glDeleteShader(vs);
         glDeleteShader(fs);
 
@@ -43,31 +46,32 @@ namespace Apogee {
             throw std::runtime_error("[Shader] link failed:\n" + log);
         }
 
-        programId = program;
+        m_programId = program;
     }
-    
+
     Shader::Shader(Shader&& other) noexcept :
-    programId(other.programId),
-    uniformLocationCache(std::move(other.uniformLocationCache)) {
-        other.programId = 0;
-        other.uniformLocationCache.clear();
+    m_programId(other.m_programId),
+    m_uniformLocationCache(std::move(other.m_uniformLocationCache)) {
+        other.m_programId = 0;
+        other.m_uniformLocationCache.clear();
     }
 
     Shader& Shader::operator=(Shader&& other) noexcept {
         if (this == &other) return *this;
 
-        glDeleteProgram(programId);
-        programId = other.programId;
-        uniformLocationCache = std::move(other.uniformLocationCache);
+        glDeleteProgram(m_programId);
+        m_programId = other.m_programId;
+        m_uniformLocationCache = std::move(other.m_uniformLocationCache);
 
-        other.programId = 0;
-        other.uniformLocationCache.clear();
+        other.m_programId = 0;
+        other.m_uniformLocationCache.clear();
         return *this;
     }
 
     Shader::~Shader() {
-        glDeleteProgram(programId);
+        glDeleteProgram(m_programId);
     }
+
     std::string Shader::readFile(const std::string& path) {
         std::ifstream file(path);
 
@@ -81,23 +85,28 @@ namespace Apogee {
         return buffer.str();
     }
 
-    // ========== PRIVATE
-    // --- HELPERS
-    // Note: overcommented for my own learning purposes
+    // ----- Private Helpers -----
+
     std::string Shader::getShaderInfoLog(const GLuint shader) {
-        GLint length = 0; // Declare where the size of where the message is gonna be saved
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);  // Get from OpenGL warn msg length
+        GLint length = 0;
+
+        // Get from OpenGL the warning message length
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
         if (length <= 1) return {};  // empty log
 
-        std::string log(static_cast<size_t>(length), '\0'); // the actual log format length
-        glGetShaderInfoLog(shader, length, nullptr, log.data()); // get the log from OpenGL
-        log.pop_back(); // avoid wierd stuff OpenGL adds
+        // Pre-allocate string based on the actual log format length
+        std::string log(static_cast<size_t>(length), '\0');
+        glGetShaderInfoLog(shader, length, nullptr, log.data());
+
+        // Remove the null terminator that OpenGL adds
+        log.pop_back();
         return log;
     }
 
-    // Note: this is repeated code because the solution is more expensive than repeating the code itself
     std::string Shader::getProgramInfoLog(const GLuint program) {
-        // Same as in shader but with program log
+        // Same shape as getShaderInfoLog but querying program state.
+        // Note: kept duplicated on purpose since the OpenGL calls differ
+        // (glGetShaderiv vs glGetProgramiv), so abstracting it costs more than repeating it.
         GLint length = 0;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
         if (length <= 1) return {}; // empty log x2 :)
@@ -109,13 +118,12 @@ namespace Apogee {
     }
 
     GLint Shader::getUniformLocation(const std::string &name) const {
-        auto it = uniformLocationCache.find(name);
-        if (it != uniformLocationCache.end()) {
+        if (const auto it = m_uniformLocationCache.find(name); it != m_uniformLocationCache.end()) {
             return it->second;
         }
 
-        const GLint location = glGetUniformLocation(programId, name.c_str());
-        uniformLocationCache[name] = location;
+        const GLint location = glGetUniformLocation(m_programId, name.c_str());
+        m_uniformLocationCache[name] = location;
         return location;
     }
 
@@ -152,6 +160,6 @@ namespace Apogee {
     }
 
     void Shader::use() const {
-        glUseProgram(programId);
+        glUseProgram(m_programId);
     }
-} // Apogee
+} // namespace Apogee
