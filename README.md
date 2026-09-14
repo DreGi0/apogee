@@ -52,7 +52,7 @@ Requires [Docker](https://docs.docker.com/get-docker/) and an X11 session.
 ## Usage
 
 ```bash
-git clone [https://github.com/DreGi0/apogee.git](https://github.com/DreGi0/apogee.git)
+git clone https://github.com/DreGi0/apogee.git
 cd apogee
 ./run.sh
 ```
